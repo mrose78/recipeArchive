@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Beer Recipe Viewer</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 p-6 font-sans">
+
+  <div class="max-w-7xl mx-auto">
+    <h1 class="text-3xl font-bold mb-4">🍺 Beer Recipe Finder</h1>
+    <input id="search" type="text" placeholder="Search by name, style, or notes..." class="w-full p-3 mb-6 border rounded">
+
+    <div id="recipes" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+  </div>
+
+  <script>
+    const API_KEY = 'AIzaSyCHKDWth1y6WpLQ4qZIQ-IqRy-FVDkNlnU';
+    const SHEET_ID = '1iSPhrjSsQwAs8ZefXovsbKnEszfmc61kDU5nYtM-X1M';
+    const RANGE = 'Recipes!A1:O';
+
+    async function fetchData() {
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${RANGE}?key=${API_KEY}`;
+      const response = await fetch(url);
+      const data = await response.json();
+      const rows = data.values;
+
+      if (!rows || rows.length < 2) return;
+
+      const headers = rows[0];
+      const entries = rows.slice(1).map(row => {
+        const obj = {};
+        headers.forEach((key, index) => {
+          obj[key] = row[index] || '';
+        });
+        return obj;
+      });
+
+      displayRecipes(entries);
+      document.getElementById('search').addEventListener('input', e => {
+        const term = e.target.value.toLowerCase();
+        const filtered = entries.filter(recipe => {
+          return (
+            recipe.Name.toLowerCase().includes(term) ||
+            recipe.Style.toLowerCase().includes(term) ||
+            recipe.Description.toLowerCase().includes(term) ||
+            recipe['Brewing Notes'].toLowerCase().includes(term)
+          );
+        });
+        displayRecipes(filtered);
+      });
+    }
+
+    function getSRMColor(srm) {
+      const srmColors = [
+        "#FFE699", "#FFD878", "#FFCA5A", "#FFBF42", "#FBB123", "#F8A600", "#F39C00",
+        "#EA8F00", "#E58500", "#DE7C00", "#D77200", "#CF6900", "#CB6200", "#C35900",
+        "#BB5100", "#B54C00", "#B04500", "#A63E00", "#A13700", "#9B3200", "#952D00",
+        "#8E2900", "#882300", "#821E00", "#7B1A00", "#771900", "#701400", "#6A0E00",
+        "#660D00", "#5E0B00", "#5A0A02", "#600903", "#520907", "#4C0505", "#470606",
+        "#440607", "#3F0708", "#3B0607", "#3A070B", "#36080A", "#340A0C", "#2F0A0A",
+        "#2B0A0A", "#2A0A0A", "#260A0A", "#240A0A", "#200A0A", "#1E0A0A", "#1B0A0A",
+        "#180A0A"
+      ];
+      const index = Math.max(0, Math.min(Math.floor(srm), srmColors.length - 1));
+      return srmColors[index];
+    }
+
+    function displayRecipes(recipes) {
+      const container = document.getElementById('recipes');
+      container.innerHTML = '';
+
+      recipes.forEach(recipe => {
+        const srmValue = parseFloat(recipe['Color (SRM)']);
+        const srmColor = getSRMColor(srmValue);
+
+        const card = document.createElement('div');
+        card.className = 'bg-white rounded-lg shadow p-4 hover:shadow-md transition';
+
+        card.innerHTML = `
+          ${recipe.Image ? `<img src="${recipe.Image}" class="w-full h-48 object-cover rounded mb-3">` : ''}
+          <div class="mb-2">
+            <h2 class="text-xl font-bold">${recipe.Name}</h2>
+            <p class="italic text-sm text-gray-600">${recipe.Style}</p>
+          </div>
+
+          <p class="mb-2">${recipe.Description}</p>
+          <ul class="text-sm text-gray-800 mb-2 space-y-1">
+            <li><strong>Batch Size:</strong> ${recipe['Batch Size']}</li>
+            <li><strong>OG:</strong> ${recipe['Original Gravity (OG)']}</li>
+            <li><strong>FG:</strong> ${recipe['Final Gravity (FG)']}</li>
+            <li><strong>ABV:</strong> ${recipe['Alcohol (ABV)']}%</li>
+            <li><strong>IBU:</strong> ${recipe['Bitterness (IBU)']}</li>
+            <li class="flex items-center gap-2">
+              <strong>SRM:</strong> ${srmValue}
+              <span style="width: 20px; height: 20px; background-color: ${srmColor}; border: 1px solid #ccc; border-radius: 4px;" title="SRM color"></span>
+            </li>
+          </ul>
+
+          <details class="text-sm mb-1"><summary class="font-medium">Fermentables</summary><p>${recipe.Fermentables.replace(/\n/g, '<br>')}</p></details>
+          <details class="text-sm mb-1"><summary class="font-medium">Hops</summary><p>${recipe.Hops.replace(/\n/g, '<br>')}</p></details>
+          <details class="text-sm mb-1"><summary class="font-medium">Misc</summary><p>${recipe.Misc.replace(/\n/g, '<br>')}</p></details>
+          <details class="text-sm mb-1"><summary class="font-medium">Yeast</summary><p>${recipe.Yeast.replace(/\n/g, '<br>')}</p></details>
+          <details class="text-sm"><summary class="font-medium">Brewing Notes</summary><p>${recipe['Brewing Notes'].replace(/\n/g, '<br>')}</p></details>
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
+    fetchData();
+  </script>
+</body>
+</html>
