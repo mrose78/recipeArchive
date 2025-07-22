@@ -10,7 +10,7 @@
 
   <div class="max-w-7xl mx-auto">
     <h1 class="text-3xl font-bold mb-4">🍺 Beer Recipe Finder</h1>
-    <input id="search" type="text" placeholder="Search by name, style, or notes..." class="w-full p-3 mb-6 border rounded">
+    <input id="search" type="text" placeholder="Search by keyword" class="w-full p-3 mb-6 border rounded">
 
     <div id="recipes" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
   </div>
@@ -44,6 +44,10 @@
           return (
             recipe.Name.toLowerCase().includes(term) ||
             recipe.Style.toLowerCase().includes(term) ||
+            recipe.Fermentables.toLowerCase().includes(term) ||
+            recipe.Hops.toLowerCase().includes(term) ||
+            recipe.Misc.toLowerCase().includes(term) ||
+            recipe.Yeast.toLowerCase().includes(term) ||
             recipe.Description.toLowerCase().includes(term) ||
             recipe['Brewing Notes'].toLowerCase().includes(term)
           );
