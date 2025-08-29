@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Familiar Archive</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-4 font-sans">
+  <div class="max-w-6xl mx-auto">
+    <h1 class="text-3xl font-bold text-center mb-6">🧜‍♂️ My Flight Rising Familiars 🧜‍♀️</h1>
+
+
+    <div class="flex items-center justify-between mb-4">
+        <input
+            type="text"
+            id="search"
+            placeholder="Search by Name or Source"
+            class="w-full p-2 border border-gray-300 rounded shadow"
+        />
+        <label class="ml-4 flex items-center space-x-2">
+            <input type="checkbox" id="own-toggle" class="w-4 h-4" />
+            <span>Only show owned</span>
+        </label>
+    </div>
+
+    <div id="familiar-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- Familiar cards inserted here -->
+    </div>
+  </div>
+
+  <script src="familiars.js"></script>
+</body>
+</html>
