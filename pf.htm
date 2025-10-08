@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Pocket Frogs Pond</title>
+  <style>
+    body {
+      font-family: "Trebuchet MS", sans-serif;
+      margin: 0;
+      background: radial-gradient(circle at 30% 20%, #6ec6ff, #2e8b57 80%);
+      background-attachment: fixed;
+      color: #fff;
+      overflow-x: hidden;
+    }
+
+    header {
+      padding: 1rem;
+      text-align: center;
+      background: rgba(0, 0, 0, 0.3);
+      border-bottom: 3px solid #2e8b57;
+    }
+
+    #filterBar {
+      text-align: center;
+      margin: 1rem;
+    }
+
+    #filterBar select {
+      padding: 0.5rem;
+      border-radius: 5px;
+      border: none;
+      font-size: 1rem;
+    }
+
+    .pond {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 2rem;
+      padding: 2rem;
+      position: relative;
+      justify-items: center; /* center cards in smaller view */
+    }
+
+    /* Lily pad "floating" background circles */
+    .pond::before, .pond::after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(144, 238, 144, 0.25);
+      z-index: 0;
+    }
+    .pond::before {
+      width: 300px;
+      height: 300px;
+      top: 20%;
+      left: 10%;
+    }
+    .pond::after {
+      width: 200px;
+      height: 200px;
+      bottom: 15%;
+      right: 20%;
+    }
+
+    .frog-card {
+      position: relative;
+      width: 220px;
+      height: 240px;
+      border-radius: 50% 50% 45% 55% / 55% 45% 55% 45%; /* irregular lily pad shape */
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.1);
+      text-align: center;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.4);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .frog-card img {
+      width: 100%;
+      height: 70%;
+      object-fit: contain;
+      transition: filter 0.3s ease;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .info {
+      padding: 0.5rem;
+      background: rgba(0,0,0,0.4);
+      font-size: 0.95rem;
+      line-height: 1.2;
+      flex-shrink: 0;
+    }
+
+    /* Ripple effect */
+    .frog-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      border: 2px solid rgba(173, 216, 230, 0.6);
+      transform: scale(0.8);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .frog-card:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 25px rgba(173, 216, 230, 0.8);
+    }
+
+    .frog-card:hover::after {
+      animation: ripple 1.5s infinite;
+    }
+
+    @keyframes ripple {
+      0% {
+        transform: scale(0.8);
+        opacity: 0.8;
+      }
+      70% {
+        transform: scale(1.3);
+        opacity: 0;
+      }
+      100% {
+        opacity: 0;
+      }
+    }
+
+    .mask {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .mask.to-be {
+      background: rgba(135, 206, 250, 0.4); /* light blue tint */
+    }
+
+    /* RESPONSIVE BREAKPOINTS */
+    @media (max-width: 1024px) { /* tablets */
+      .pond {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      }
+    }
+
+    @media (max-width: 768px) { /* small tablets / large phones */
+      .pond {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .frog-card {
+        width: 180px;
+        height: 200px;
+      }
+    }
+
+    @media (max-width: 480px) { /* iPhone / small phones */
+      .pond {
+        grid-template-columns: 1fr;
+      }
+      .frog-card {
+        width: 80%;
+        max-width: 260px;
+        margin: 0 auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🐸 My Pocket Frogs Pond</h1>
+    <p>Floating on lily pads in my collection</p>
+  </header>
+
+  <div id="filterBar">
+    <label for="statusFilter">Filter by Status: </label>
+    <select id="statusFilter">
+      <option value="all">All</option>
+      <option value="have">Have</option>
+      <option value="need">Need</option>
+      <option value="to-be">To-Be</option>
+    </select>
+  </div>
+
+  <div class="pond" id="pond"></div>
+
+  <script>
+    const pond = document.getElementById("pond");
+    const filterSelect = document.getElementById("statusFilter");
+
+    // Replace with your Apps Script web app URL
+    const DATA_URL = "https://script.google.com/macros/s/AKfycbwPmUaagSIZswTtGgnvZAAvtqIrTddRJ9DvdLs4hKlechtKrvc1dBLoLokufnsrg-x4Ew/exec";
+
+    let frogs = [];
+
+    async function loadFrogs() {
+      const res = await fetch(DATA_URL);
+      frogs = await res.json();
+      displayFrogs();
+    }
+
+    function displayFrogs() {
+      const filter = filterSelect.value;
+      pond.innerHTML = "";
+
+      frogs
+        .filter(f => filter === "all" || f.status.toLowerCase() === filter)
+        .forEach(f => {
+          const card = document.createElement("div");
+          card.className = "frog-card";
+
+          const img = document.createElement("img");
+          img.src = f.imageon;
+
+          // Apply grayscale for "Need"
+          if (f.status.toLowerCase() === "need") {
+            img.style.filter = "grayscale(100%)";
+          }
+
+          const info = document.createElement("div");
+          info.className = "info";
+          info.innerHTML = `<strong>${f.frog}</strong><br>Rarity: ${f.rarity}<br>Status: ${f.status}`;
+
+          // Overlay only for "To-Be"
+          if (f.status.toLowerCase() === "to-be") {
+            const mask = document.createElement("div");
+            mask.classList.add("mask", "to-be");
+            card.appendChild(mask);
+          }
+
+          card.appendChild(img);
+          card.appendChild(info);
+          pond.appendChild(card);
+        });
+    }
+
+    filterSelect.addEventListener("change", displayFrogs);
+
+    loadFrogs();
+  </script>
+</body>
+</html>
